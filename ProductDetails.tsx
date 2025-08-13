@@ -273,7 +273,7 @@ export default function ProductDetails() {
       {/* Header with title and button on the same line */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Product Details Managementt</h1>
+          <h1 className="text-3xl font-bold text-foreground">Product Details Management</h1>
           <p className="text-muted-foreground">Manage detailed measurements and specifications</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
