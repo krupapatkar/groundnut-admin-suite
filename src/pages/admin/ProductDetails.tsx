@@ -69,10 +69,45 @@ export default function ProductDetails() {
 
   const { toast } = useToast();
 
-  // Fetch product details from Supabase
+  // Fetch products and product details from Supabase on component mount
   useEffect(() => {
+    fetchProducts();
     fetchProductDetails();
   }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      // Set products state directly with Supabase data (not from DataContext)
+      setSupabaseProducts((data || []).map(product => ({
+        id: product.id,
+        slip_number: product.slip_number || '',
+        company_name: product.company_name || '',
+        vehicle_number: product.vehicle_number || '',
+        // Map other needed fields
+      })));
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch products from database",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const [supabaseProducts, setSupabaseProducts] = useState<{
+    id: string;
+    slip_number: string;
+    company_name: string;
+    vehicle_number: string;
+  }[]>([]);
 
   const fetchProductDetails = async () => {
     try {
@@ -175,7 +210,7 @@ export default function ProductDetails() {
       return;
     }
     
-    const selectedProduct = products.find(product => product.id.toString() === formData.product_id);
+    const selectedProduct = supabaseProducts.find(product => product.id === formData.product_id);
     if (!selectedProduct) {
       toast({
         title: "Product Not Found",
@@ -419,8 +454,8 @@ export default function ProductDetails() {
                       <SelectValue placeholder="Select Product" />
                     </SelectTrigger>
                     <SelectContent>
-                      {products.map((product) => (
-                        <SelectItem key={product.id} value={product.id.toString()}>
+                      {supabaseProducts.map((product) => (
+                        <SelectItem key={product.id} value={product.id}>
                           {product.slip_number} - {product.company_name}
                         </SelectItem>
                       ))}

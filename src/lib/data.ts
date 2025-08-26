@@ -31,10 +31,10 @@ export interface Vehicle {
 }
 
 export interface Product {
-  id: number;
-  company_id: number;
+  id: string;
+  company_id: string;
   company_name: string;
-  vehicle_id: number;
+  vehicle_id: string;
   vehicle_number: string;
   slip_number: string;
   purchase_date: string;
@@ -49,7 +49,7 @@ export interface Product {
 
 export interface Order {
   id: number;
-  product_id: number;
+  product_id: string;
   status: "pending" | "completed" | "cancelled";
   amount: number;
   created_at: string;
@@ -243,10 +243,10 @@ export const mockVehicles: Vehicle[] = [
 
 export const mockProducts: Product[] = [
   {
-    id: 1,
-    company_id: 1,
+    id: "550e8400-e29b-41d4-a716-446655440001",
+    company_id: "550e8400-e29b-41d4-a716-446655440011",
     company_name: "ABC Trading Co.",
-    vehicle_id: 1,
+    vehicle_id: "550e8400-e29b-41d4-a716-446655440021", 
     vehicle_number: "TN-01-AB-1234",
     slip_number: "SL001",
     purchase_date: "2024-01-15",
@@ -259,10 +259,10 @@ export const mockProducts: Product[] = [
     created_at: "2024-01-15",
   },
   {
-    id: 2,
-    company_id: 2,
+    id: "550e8400-e29b-41d4-a716-446655440002",
+    company_id: "550e8400-e29b-41d4-a716-446655440012",
     company_name: "XYZ Enterprises",
-    vehicle_id: 2,
+    vehicle_id: "550e8400-e29b-41d4-a716-446655440022",
     vehicle_number: "KA-05-XY-5678",
     slip_number: "SL002",
     purchase_date: "2024-02-10",
@@ -275,10 +275,10 @@ export const mockProducts: Product[] = [
     created_at: "2024-02-10",
   },
   {
-    id: 3,
-    company_id: 3,
+    id: "550e8400-e29b-41d4-a716-446655440003",
+    company_id: "550e8400-e29b-41d4-a716-446655440013",
     company_name: "Global Groundnut Ltd",
-    vehicle_id: 3,
+    vehicle_id: "550e8400-e29b-41d4-a716-446655440023",
     vehicle_number: "MH-12-CD-9012",
     slip_number: "SL003",
     purchase_date: "2024-02-15",
@@ -291,10 +291,10 @@ export const mockProducts: Product[] = [
     created_at: "2024-02-15",
   },
   {
-    id: 4,
-    company_id: 5,
+    id: "550e8400-e29b-41d4-a716-446655440004",
+    company_id: "550e8400-e29b-41d4-a716-446655440014",
     company_name: "Delhi Groundnut Corp",
-    vehicle_id: 6,
+    vehicle_id: "550e8400-e29b-41d4-a716-446655440024",
     vehicle_number: "DL-01-XY-9999",
     slip_number: "SL004",
     purchase_date: "2024-02-14",
@@ -311,28 +311,28 @@ export const mockProducts: Product[] = [
 export const mockOrders: Order[] = [
   {
     id: 1,
-    product_id: 1,
+    product_id: "550e8400-e29b-41d4-a716-446655440001",
     status: "pending",
     amount: 260000.00,
     created_at: "2024-08-19",
   },
   {
     id: 2,
-    product_id: 2,
+    product_id: "550e8400-e29b-41d4-a716-446655440002",
     status: "pending",
     amount: 405000.00,
     created_at: "2024-08-18",
   },
   {
     id: 3,
-    product_id: 3,
+    product_id: "550e8400-e29b-41d4-a716-446655440003",
     status: "completed",
     amount: 500000.00,
     created_at: "2024-08-17",
   },
   {
     id: 4,
-    product_id: 1,
+    product_id: "550e8400-e29b-41d4-a716-446655440001",
     status: "pending",
     amount: 150000.00,
     created_at: "2024-08-16",

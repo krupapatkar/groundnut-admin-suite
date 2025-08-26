@@ -131,18 +131,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return mockVehicles;
   });
 
-  const [products, setProducts] = useState<Product[]>(() => {
-    const savedProducts = localStorage.getItem('products');
-    if (savedProducts) {
-      try {
-        return JSON.parse(savedProducts);
-      } catch (error) {
-        console.error('Error parsing saved products:', error);
-        return mockProducts;
-      }
-    }
-    return mockProducts;
-  });
+  const [products, setProducts] = useState<Product[]>([]);
 
   const [orders, setOrders] = useState<Order[]>(() => {
     const savedOrders = localStorage.getItem('orders');
@@ -205,6 +194,30 @@ export function DataProvider({ children }: { children: ReactNode }) {
   });
 
   const [cities, setCities] = useState<City[]>([]);
+
+  // Fetch products from Supabase on component mount
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        if (data) {
+          setProducts(data);
+        }
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        // Fallback to empty array instead of mock data to avoid UUID conflicts
+        setProducts([]);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   // Save alerts to localStorage whenever alerts change
   const updateAlerts = (newAlerts: SystemAlert[] | ((prev: SystemAlert[]) => SystemAlert[])) => {
@@ -392,7 +405,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     generateActivity('product', `New product ${product.slip_number} added by ${product.company_name}`);
     
     // Automatically activate the company if it's inactive when adding a product
-    const relatedCompany = companies.find(company => company.id === product.company_id);
+    const relatedCompany = companies.find(company => company.id.toString() === product.company_id.toString());
     if (relatedCompany && !relatedCompany.status) {
       updateCompany(relatedCompany.id, { status: true });
       generateActivity('company', `${relatedCompany.name} company automatically activated due to new product transaction`);
