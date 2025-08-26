@@ -145,10 +145,19 @@ export default function ProductDetails() {
     setFormData(prev => ({ ...prev, [`bag${fieldNum}`]: value }));
   };
 
-  const isFormValid = formData.manualTotalBags > 0 && formData.manualTotalBags === formData.totalBags;
+  const isFormValid = formData.product_id && formData.manualTotalBags > 0 && formData.manualTotalBags === formData.totalBags;
 
   const handleSubmit = async () => {
-    if (!isFormValid) {
+    if (!formData.product_id) {
+      toast({
+        title: "Missing Product",
+        description: "Please select a product before saving.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (formData.manualTotalBags !== formData.totalBags) {
       toast({
         title: "Invalid Form",
         description: "Manual total bags must match the calculated total bags.",
@@ -156,8 +165,27 @@ export default function ProductDetails() {
       });
       return;
     }
+
+    if (formData.manualTotalBags <= 0) {
+      toast({
+        title: "Invalid Bags",
+        description: "Total bags must be greater than 0.",
+        variant: "destructive",
+      });
+      return;
+    }
     
-    const productSlip = products.find(product => product.id.toString() === formData.product_id)?.slip_number;
+    const selectedProduct = products.find(product => product.id.toString() === formData.product_id);
+    if (!selectedProduct) {
+      toast({
+        title: "Product Not Found",
+        description: "Selected product could not be found.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const productSlip = selectedProduct.slip_number;
     
     // Convert formData to ProductDetail format (sum all bag values)
     const totalBagValue = bagFields.reduce((sum, fieldNum) => {
@@ -169,11 +197,26 @@ export default function ProductDetails() {
     const bagBreakdown: { [key: string]: number } = {};
     bagFields.forEach(fieldNum => {
       const bagKey = `bag${fieldNum}`;
-      bagBreakdown[bagKey] = formData[bagKey] as number || 0;
+      const bagValue = formData[bagKey] as number || 0;
+      if (bagValue > 0) { // Only include bags with positive values
+        bagBreakdown[bagKey] = bagValue;
+      }
+    });
+    
+    console.log('Submitting product detail:', {
+      product_id: formData.product_id,
+      product_slip: productSlip,
+      bardan: formData.bardan,
+      kad: formData.kad,
+      bag: totalBagValue,
+      bag_breakdown: bagBreakdown,
+      gross_weight: formData.gross_weight,
+      net_weight: formData.net_weight,
     });
     
     try {
       if (editingDetail) {
+        console.log('Updating existing detail:', editingDetail.id);
         // Update existing product detail
         const { error } = await supabase
           .from('product_details')
@@ -189,13 +232,18 @@ export default function ProductDetails() {
           })
           .eq('id', editingDetail.id);
         
-        if (error) throw error;
+        if (error) {
+          console.error('Update error:', error);
+          throw error;
+        }
         
+        console.log('Update successful');
         toast({
           title: "Product Detail Updated",
           description: "Product detail has been successfully updated.",
         });
       } else {
+        console.log('Creating new detail');
         // Add new product detail
         const { error } = await supabase
           .from('product_details')
@@ -210,8 +258,12 @@ export default function ProductDetails() {
             net_weight: formData.net_weight,
           });
         
-        if (error) throw error;
+        if (error) {
+          console.error('Insert error:', error);
+          throw error;
+        }
         
+        console.log('Insert successful');
         toast({
           title: "Product Detail Added",
           description: "New product detail has been successfully created.",
@@ -221,11 +273,17 @@ export default function ProductDetails() {
       // Refresh the data
       await fetchProductDetails();
       resetForm();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving product detail:', error);
+      let errorMessage = "Failed to save product detail";
+      
+      if (error?.message) {
+        errorMessage = `${errorMessage}: ${error.message}`;
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to save product detail",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -337,7 +395,7 @@ export default function ProductDetails() {
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => setEditingDetail(null)}>
+            <Button onClick={() => { resetForm(); setEditingDetail(null); }}>
               <Plus className="mr-2 h-4 w-4" />
               Add Detail
             </Button>
@@ -542,27 +600,38 @@ export default function ProductDetails() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredDetails.map((detail) => (
-                <TableRow key={detail.id}>
-                  <TableCell className="font-medium">{detail.product_slip}</TableCell>
-                  <TableCell>{detail.bardan}</TableCell>
-                  <TableCell>{detail.kad}</TableCell>
-                  <TableCell>{detail.bag}</TableCell>
-                  <TableCell>{detail.gross_weight} kg</TableCell>
-                  <TableCell>{detail.net_weight} kg</TableCell>
-                  <TableCell>{new Date(detail.created_at).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Button variant="ghost" size="sm" onClick={() => handleEdit(detail)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(detail.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+              {filteredDetails.length > 0 ? (
+                filteredDetails.map((detail) => (
+                  <TableRow key={detail.id}>
+                    <TableCell className="font-medium">{detail.product_slip}</TableCell>
+                    <TableCell>{detail.bardan}</TableCell>
+                    <TableCell>{detail.kad}</TableCell>
+                    <TableCell>{detail.bag}</TableCell>
+                    <TableCell>{detail.gross_weight} kg</TableCell>
+                    <TableCell>{detail.net_weight} kg</TableCell>
+                    <TableCell>{new Date(detail.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(detail)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDelete(detail.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    {searchTerm 
+                      ? `No product details found matching "${searchTerm}"` 
+                      : "No product details found. Create your first product detail to get started."
+                    }
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>
