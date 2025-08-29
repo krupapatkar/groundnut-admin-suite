@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Edit, Trash2, Eye } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@/lib/data";
 import { useData } from "@/contexts/DataContext";
@@ -33,6 +33,7 @@ export default function Users() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     user_name: "",
     email_address: "",
@@ -49,6 +50,19 @@ export default function Users() {
     user.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email_address.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Group users by creation date
+  const groupedUsers = filteredUsers.reduce((groups, user) => {
+    const date = user.created_at;
+    if (!groups[date]) {
+      groups[date] = [];
+    }
+    groups[date].push(user);
+    return groups;
+  }, {} as Record<string, User[]>);
+
+  // Sort dates in descending order (newest first)
+  const sortedDates = Object.keys(groupedUsers).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -187,6 +201,7 @@ export default function Users() {
     });
     setEditingUser(null);
     setIsDialogOpen(false);
+    setShowPassword(false);
   };
 
   const handleEdit = (user: User) => {
@@ -285,14 +300,24 @@ export default function Users() {
 
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder={editingUser ? "Leave blank to keep current password" : "Set user password"}
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  required={!editingUser}
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder={editingUser ? "Leave blank to keep current password" : "Set user password"}
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    required={!editingUser}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
 
 
@@ -368,49 +393,65 @@ export default function Users() {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Mobile</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.user_name}</TableCell>
-                  <TableCell>{user.email_address}</TableCell>
-                  <TableCell>
-                    <Badge variant={user.type === "ADMIN" ? "default" : "secondary"}>
-                      {user.type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{user.country_code} {user.mobile_number}</TableCell>
-                  <TableCell>
-                    <Badge variant={user.status ? "default" : "destructive"}>
-                      {user.status ? "Active" : "Inactive"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{user.created_at}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Button variant="ghost" size="sm" onClick={() => handleEdit(user)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(user.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
+          {sortedDates.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No users found matching your search criteria.
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {sortedDates.map((date) => (
+                <div key={date} className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <h3 className="text-lg font-semibold text-foreground">{date}</h3>
+                    <span className="text-sm text-muted-foreground">
+                      ({groupedUsers[date].length} user{groupedUsers[date].length !== 1 ? 's' : ''})
+                    </span>
+                  </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Mobile</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {groupedUsers[date].map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell className="font-medium">{user.user_name}</TableCell>
+                          <TableCell>{user.email_address}</TableCell>
+                          <TableCell>
+                            <Badge variant={user.type === "ADMIN" ? "default" : "secondary"}>
+                              {user.type}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{user.country_code} {user.mobile_number}</TableCell>
+                          <TableCell>
+                            <Badge variant={user.status ? "default" : "destructive"}>
+                              {user.status ? "Active" : "Inactive"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <Button variant="ghost" size="sm" onClick={() => handleEdit(user)}>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="sm" onClick={() => handleDelete(user.id)}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               ))}
-            </TableBody>
-          </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
