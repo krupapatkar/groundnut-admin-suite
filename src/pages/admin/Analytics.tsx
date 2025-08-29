@@ -188,7 +188,7 @@ const getRegionalData = () => {
 
   // Add product revenue to regions based on company locations
   products.forEach(product => {
-    const company = companies.find(c => c.id === product.company_id);
+    const company = companies.find(c => String(c.id) === String(product.company_id));
     if (company) {
       const location = company.location_name || 'Unknown';
       if (!regionMap[location]) {

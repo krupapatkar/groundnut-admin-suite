@@ -152,7 +152,7 @@ export default function Users() {
         if (error) throw error;
 
         const newUser: User = {
-          id: Date.now(), // local id for demo list
+          id: data?.id || '', // Use Supabase UUID
           supabase_id: data?.id, // map to Supabase row
           ...formData,
           created_at: data?.created_at ? new Date(data.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
@@ -203,7 +203,7 @@ export default function Users() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     try {
       const user = users.find(u => u.id === id);
       

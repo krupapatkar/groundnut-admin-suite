@@ -230,7 +230,7 @@ export default function Reports() {
   const handleCustomerReport = () => {
     const customerData = companies.map(company => {
       const companyTransactions = transactions.filter(t => t.description.includes(company.name));
-      const companyProducts = products.filter(p => p.company_id === company.id);
+      const companyProducts = products.filter(p => String(p.company_id) === String(company.id));
       
       return {
         id: company.id,
@@ -266,7 +266,7 @@ export default function Reports() {
       );
 
       // Calculate total revenue from products sold by this company
-      const companyProducts = products.filter(product => product.company_id === company.id);
+      const companyProducts = products.filter(product => String(product.company_id) === String(company.id));
       const totalRevenue = companyProducts.reduce((sum, product) => sum + (product.final_price || 0), 0);
 
       console.log(`🏢 Company: ${company.name} (ID: ${company.id}, Status: ${company.status})`);

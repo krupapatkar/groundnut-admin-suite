@@ -1,6 +1,6 @@
 // Centralized mock data for the application
 export interface User {
-  id: number;
+  id: string;
   supabase_id?: string;
   user_name: string;
   email_address: string;
@@ -89,63 +89,7 @@ export interface City {
 }
 
 // Mock data
-export const mockUsers: User[] = [
-  {
-    id: 1,
-    user_name: "Admin User",
-    email_address: "admin@groundnut.com",
-    password: "admin123",
-    type: "ADMIN",
-    mobile_number: "9876543210",
-    country_code: "+91",
-    status: true,
-    created_at: "2024-01-15",
-  },
-  {
-    id: 2,
-    user_name: "John Doe",
-    email_address: "john@example.com",
-    password: "john123",
-    type: "USER",
-    mobile_number: "9876543211",
-    country_code: "+91",
-    status: true,
-    created_at: "2024-01-16",
-  },
-  {
-    id: 3,
-    user_name: "Jane Smith",
-    email_address: "jane@example.com",
-    password: "jane123",
-    type: "USER",
-    mobile_number: "9876543212",
-    country_code: "+91",
-    status: false,
-    created_at: "2024-01-17",
-  },
-  {
-    id: 4,
-    user_name: "Bob Wilson",
-    email_address: "bob@example.com",
-    password: "bob123",
-    type: "USER",
-    mobile_number: "9876543213",
-    country_code: "+91",
-    status: true,
-    created_at: "2024-01-18",
-  },
-  {
-    id: 5,
-    user_name: "Alice Brown",
-    email_address: "alice@example.com",
-    password: "alice123",
-    type: "USER",
-    mobile_number: "9876543214",
-    country_code: "+91",
-    status: true,
-    created_at: "2024-01-19",
-  },
-];
+export const mockUsers: User[] = [];
 
 export const mockCompanies: Company[] = [
   {

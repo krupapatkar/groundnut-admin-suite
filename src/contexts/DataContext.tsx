@@ -44,17 +44,17 @@ interface DataContextType {
   addTransaction: (transaction: Transaction) => void;
   addAlert: (alert: SystemAlert) => void;
   addCity: (city: City) => void;
-  updateUser: (id: number, user: Partial<User>) => void;
+  updateUser: (id: string, user: Partial<User>) => void;
   updateCompany: (id: number, company: Partial<Company>) => void;
   updateVehicle: (id: number, vehicle: Partial<Vehicle>) => void;
-  updateProduct: (id: number, product: Partial<Product>) => void;
+  updateProduct: (id: string, product: Partial<Product>) => void;
   updateOrder: (id: number, order: Partial<Order>) => void;
   updateAlert: (id: number, alert: Partial<SystemAlert>) => void;
   updateCity: (id: number, city: Partial<City>) => void;
-  deleteUser: (id: number) => void;
+  deleteUser: (id: string) => void;
   deleteCompany: (id: number) => void;
   deleteVehicle: (id: number) => void;
-  deleteProduct: (id: number) => void;
+  deleteProduct: (id: string) => void;
   deleteOrder: (id: number) => void;
   deleteCity: (id: number) => void;
   getMonthlyRevenue: () => number;
@@ -92,18 +92,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return mockAlerts;
   });
   
-  const [users, setUsers] = useState<User[]>(() => {
-    const savedUsers = localStorage.getItem('users');
-    if (savedUsers) {
-      try {
-        return JSON.parse(savedUsers);
-      } catch (error) {
-        console.error('Error parsing saved users:', error);
-        return mockUsers;
-      }
-    }
-    return mockUsers;
-  });
+  const [users, setUsers] = useState<User[]>([]);
 
   const [companies, setCompanies] = useState<Company[]>(() => {
     const savedCompanies = localStorage.getItem('companies');
@@ -459,7 +448,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     generateActivity('company', `${city.name} added as city`);
   };
 
-  const updateUser = (id: number, updatedUser: Partial<User>) => {
+  const updateUser = (id: string, updatedUser: Partial<User>) => {
     setUsers(prev => {
       const updated = prev.map(user => {
         if (user.id === id) {
@@ -529,7 +518,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const updateProduct = (id: number, updatedProduct: Partial<Product>) => {
+  const updateProduct = (id: string, updatedProduct: Partial<Product>) => {
     setProducts(prev => {
       const updated = prev.map(product => {
         if (product.id === id) {
@@ -544,7 +533,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const deleteUser = (id: number) => {
+  const deleteUser = (id: string) => {
     setUsers(prev => {
       const userToDelete = prev.find(user => user.id === id);
       const updated = prev.filter(user => user.id !== id);
@@ -586,7 +575,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const deleteProduct = (id: number) => {
+  const deleteProduct = (id: string) => {
     setProducts(prev => {
       const productToDelete = prev.find(product => product.id === id);
       const updated = prev.filter(product => product.id !== id);
@@ -598,8 +587,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
       
       return updated;
     });
-
-    // Note: Removed automatic order deletion to preserve static data as requested by user
   };
 
   const deleteOrder = (id: number) => {
@@ -789,7 +776,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     products.forEach(product => {
       if (product.weight && product.weight < 100) {
         newAlerts.push({
-          id: 2000 + product.id,
+          id: 2000 + (parseInt(product.id.slice(-6)) || Math.random() * 1000), // Use last 6 chars of UUID as number
           type: 'warning',
           message: `Low inventory alert for Product ${product.slip_number} - ${product.weight}kg total weight`,
           created_at: new Date(now.getTime() - Math.random() * 60 * 60 * 1000).toISOString(), // Within last hour
@@ -934,10 +921,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
         }
 
         const mappedProducts = (productsData || []).map((p: any) => ({
-          id: mapProductId(p.id) || Date.now(),
-          company_id: mapCompanyId(p.company_id) ?? 0,
+          id: p.id || '', // Keep original UUID from Supabase
+          company_id: p.company_id || '',
           company_name: p.company_name,
-          vehicle_id: mapVehicleId(p.vehicle_id) ?? 0,
+          vehicle_id: p.vehicle_id || '',
           vehicle_number: p.vehicle_number,
           slip_number: p.slip_number,
           purchase_date: p.purchase_date,
@@ -961,7 +948,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
         const mappedOrders = (ordersData || []).map((o: any, idx: number) => ({
           id: idx + 1_000_000,
-          product_id: mapProductId(o.product_id) ?? 0,
+          product_id: o.product_id || '',
           status: (o.status as 'pending' | 'completed' | 'cancelled') || 'pending',
           amount: Number(o.amount) || 0,
           created_at: o.created_at ? new Date(o.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
@@ -981,8 +968,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
           setTransactions(prev => [...prev, ...mappedTransactions]);
         }
 
-        const mappedUsers = (usersData || []).map((u: any, idx: number) => ({
-          id: idx + 1_000_000,
+        const mappedUsers = (usersData || []).map((u: any) => ({
+          id: u.id || '', // Keep original UUID from Supabase
           user_name: u.user_name,
           email_address: u.email_address,
           password: u.password || '',
