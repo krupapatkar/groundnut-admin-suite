@@ -51,19 +51,6 @@ export default function Users() {
     user.email_address.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Group users by creation date
-  const groupedUsers = filteredUsers.reduce((groups, user) => {
-    const date = user.created_at;
-    if (!groups[date]) {
-      groups[date] = [];
-    }
-    groups[date].push(user);
-    return groups;
-  }, {} as Record<string, User[]>);
-
-  // Sort dates in descending order (newest first)
-  const sortedDates = Object.keys(groupedUsers).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -393,65 +380,49 @@ export default function Users() {
           </div>
         </CardHeader>
         <CardContent>
-          {sortedDates.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No users found matching your search criteria.
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {sortedDates.map((date) => (
-                <div key={date} className="space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <h3 className="text-lg font-semibold text-foreground">{date}</h3>
-                    <span className="text-sm text-muted-foreground">
-                      ({groupedUsers[date].length} user{groupedUsers[date].length !== 1 ? 's' : ''})
-                    </span>
-                  </div>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Mobile</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {groupedUsers[date].map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell className="font-medium">{user.user_name}</TableCell>
-                          <TableCell>{user.email_address}</TableCell>
-                          <TableCell>
-                            <Badge variant={user.type === "ADMIN" ? "default" : "secondary"}>
-                              {user.type}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{user.country_code} {user.mobile_number}</TableCell>
-                          <TableCell>
-                            <Badge variant={user.status ? "default" : "destructive"}>
-                              {user.status ? "Active" : "Inactive"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-2">
-                              <Button variant="ghost" size="sm" onClick={() => handleEdit(user)}>
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="sm" onClick={() => handleDelete(user.id)}>
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Mobile</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredUsers.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">{user.user_name}</TableCell>
+                  <TableCell>{user.email_address}</TableCell>
+                  <TableCell>
+                    <Badge variant={user.type === "ADMIN" ? "default" : "secondary"}>
+                      {user.type}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{user.country_code} {user.mobile_number}</TableCell>
+                  <TableCell>
+                    <Badge variant={user.status ? "default" : "destructive"}>
+                      {user.status ? "Active" : "Inactive"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{user.created_at}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-2">
+                      <Button variant="ghost" size="sm" onClick={() => handleEdit(user)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleDelete(user.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
               ))}
-            </div>
-          )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>
